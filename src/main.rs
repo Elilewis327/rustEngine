@@ -67,11 +67,10 @@ fn draw (shader_program: &ShaderProgram){
     clear_color(0.2, 0.3, 0.3, 1.0); // set this to like the sky color or something
     clear();
 
-    square(shader_program, -1.0, -1.0, 1.0, 1.0, 0.0, 0.2, 1.0, 1.0);
+    square(shader_program, -1.0, -1.0, 0.0, 1.0, 0.0, 0.2, 1.0, 1.0);
+    square(shader_program, 0.0, -1.0, 1.0, 1.0, 0.7, 0.0, 1.0, 1.0);
     
-    unsafe { 
-        gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
-    }
+    
 }
 
 
@@ -117,6 +116,9 @@ pub fn square(shader_program: &ShaderProgram, x: f32, y: f32, w: f32, z: f32, r:
     }   
     //polygon_mode(PolygonMode::Line);
     
+    unsafe { 
+        gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
+    }
 }
 
 //consts
