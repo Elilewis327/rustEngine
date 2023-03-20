@@ -3,12 +3,24 @@ use glfw::*;
 use gl::types::*;
 use std::ffi::CString;
 use std::mem;
+use std::env;
 
 pub mod gl_funcs;
 use crate::gl_funcs::*;
 
 fn main(){
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+
+    glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
+    glfw.window_hint(WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
+    
+    match env::consts::OS {
+        "macos" => glfw.window_hint(WindowHint::OpenGlForwardCompat(true)),
+        "linux" => {},
+        _ => panic!("Get a real computer")
+    }
+
+
 
     // Create a windowed mode window and its OpenGL context
     let (mut window, events) = glfw.create_window(800, 600, "Window", glfw::WindowMode::Windowed)
@@ -41,19 +53,28 @@ fn main(){
 
 }
 
+#[allow(unused_variables)]
 fn draw (glfw: &mut Glfw, window: &mut glfw::Window, shader_program: &ShaderProgram){
     clear();
     
     let time = glfw.get_time();
     let green = time.sin() / 2.0 + 0.5;
-    
+    let red = time.cos() / 2.0 + 5.0;
+    let blue = (time+5.0).cos() / 2.0 + 5.0;
+
     unsafe { 
-        let c_str = CString::new("ourColor").unwrap();
-        let vertex_color_location = gl::GetUniformLocation(shader_program.prog_id, c_str.as_ptr() as *const GLchar);
-        gl::Uniform4f(vertex_color_location, 0.0, green as GLfloat, 0.0, 1.0);
-        gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
+               gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
     }
 }
+
+pub fn change_draw_color (shader_program: ShaderProgram, red: &f64, green: &f64, blue: &f64){ 
+    unsafe {
+        let c_str = CString::new("ourColor").unwrap();
+        let vertex_color_location = gl::GetUniformLocation(shader_program.prog_id, c_str.as_ptr() as *const GLchar);
+        gl::Uniform4f(vertex_color_location, red as GLfloat, green as GLfloat, blue as GLfloat, 1.0);
+    }
+}
+
 
 fn triangle (window: &mut glfw::Window) -> ShaderProgram {
     gl::load_with(|f_name| window.get_proc_address(f_name) as *const _); 
