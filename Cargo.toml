@@ -10,4 +10,3 @@ edition = "2021"
 bytemuck = "1"
 gl = "0.14.0"
 glfw = "0.51.0"
-

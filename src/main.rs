@@ -1,10 +1,11 @@
 #![allow(non_snake_case)]
 use glfw::*;
+use gl::types::*;
+use std::ffi::CString;
 use std::mem;
 
 pub mod gl_funcs;
 use crate::gl_funcs::*;
-
 
 fn main(){
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
@@ -13,7 +14,7 @@ fn main(){
     let (mut window, events) = glfw.create_window(800, 600, "Window", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window.");
 
-    triangle(&mut window);
+    let shader_program = triangle(&mut window);
 
     window.make_current();
     window.set_key_polling(true);
@@ -33,21 +34,28 @@ fn main(){
             }
         }
         
-        draw(&mut window);
+        draw(&mut glfw, &mut window, &shader_program);
 
         // call gl get error probs
     }
 
 }
 
-fn draw (window: &mut glfw::Window){
+fn draw (glfw: &mut Glfw, window: &mut glfw::Window, shader_program: &ShaderProgram){
     clear();
+    
+    let time = glfw.get_time();
+    let green = time.sin() / 2.0 + 0.5;
+    
     unsafe { 
+        let c_str = CString::new("ourColor").unwrap();
+        let vertex_color_location = gl::GetUniformLocation(shader_program.prog_id, c_str.as_ptr() as *const GLchar);
+        gl::Uniform4f(vertex_color_location, 0.0, green as GLfloat, 0.0, 1.0);
         gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
     }
 }
 
-fn triangle (window: &mut glfw::Window) {
+fn triangle (window: &mut glfw::Window) -> ShaderProgram {
     gl::load_with(|f_name| window.get_proc_address(f_name) as *const _); 
 
     clear_color(0.2, 0.3, 0.3, 1.0);
@@ -87,12 +95,12 @@ fn triangle (window: &mut glfw::Window) {
     }   
 
     let shader_program =
-        ShaderProgram::from_vert_frag(VERT_SHADER, FRAG_SHADER).unwrap();
+        ShaderProgram::from_file_vert_frag(VERT_SHADER, FRAG_SHADER).unwrap();
     
     shader_program.use_program();
-    
-    polygon_mode(PolygonMode::Line);
 
+    //polygon_mode(PolygonMode::Line);
+    shader_program
 }
 
 //consts
@@ -105,18 +113,5 @@ const VERTICES: [Vertex; 4] =
 const INDICES: [TriIndexes; 2] = [[0, 1, 3], [1, 2, 3]];
 
 
-const VERT_SHADER: &str = r#"#version 330 core
-            layout (location = 0) in vec3 pos;
-            void main() {
-                gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);
-            }
-            "#;
-
-const FRAG_SHADER: &str = r#"#version 330 core
-        out vec4 final_color;
-        void main() {
-            final_color = vec4(1.0, 0.5, 0.2, 1.0);
-        }
-        "#;
-
-
+const VERT_SHADER: &str = "./vert.glsl";
+const FRAG_SHADER: &str = "./frag.glsl";
