@@ -15,6 +15,14 @@ pub fn clear(){
     unsafe { gl::Clear(gl::COLOR_BUFFER_BIT); }
 }
 
+pub fn change_draw_color (shader_program: &ShaderProgram, uniform_name: &str, red: &f32, green: &f32, blue: &f32, alpha: &f32){ 
+    unsafe {
+        let c_str = std::ffi::CString::new(uniform_name).unwrap();
+        let vertex_color_location = gl::GetUniformLocation(shader_program.prog_id, c_str.as_ptr() as *const GLchar);
+        gl::Uniform4f(vertex_color_location, *red as GLfloat, *green as GLfloat, *blue as GLfloat, *alpha as GLfloat);
+    }
+}
+
 /// vertex arrays
 pub struct VertexArray (pub GLuint);
 impl VertexArray {
