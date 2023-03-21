@@ -327,12 +327,12 @@ pub mod gl_funcs {
 
 
 
-    pub struct square{
-        pub pos: Vec4,    
-        pub color: Vec4,
+    pub struct Square{
+        pos: Vec4,    
+        color: Vec4,
     }
-    impl square {
-        pub fn new(shader_program: &ShaderProgram, pos: Vec4, color: Vec4) -> Self {
+    impl Square {
+        pub fn new(shader_program: &ShaderProgram, pos: &Vec4, color: &Vec4) -> Self {
 
             change_draw_color(shader_program, &"ourColor", &color[0], &color[1], &color[2], &color[3]);
 
@@ -366,8 +366,20 @@ pub mod gl_funcs {
             }   
             //polygon_mode(PolygonMode::Line);
 
-            Self{pos: pos, color: color}
+            Self{pos: *pos, color: *color}
 
+        }
+
+        pub fn set_pos (&mut self, pos: &Vec4){
+            self.pos = *pos;
+        }
+
+        pub fn get_pos (&mut self) -> Vec4 {
+            self.pos
+        }
+
+        pub fn set_color (&mut self, color: &Vec4){
+            self.color = *color;
         }
 
         pub fn draw(&mut self) {
