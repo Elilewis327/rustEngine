@@ -34,9 +34,6 @@ pub mod gl_funcs {
     }
 
 
-
-
-
     ///clear color
     pub fn clear_color(r: f32, g: f32, b: f32, a: f32) {
         unsafe { gl::ClearColor(r, g, b, a) }
@@ -328,8 +325,10 @@ pub mod gl_funcs {
 
 
     pub struct Square{
-        pos: Vec4,    
+        pos: Vec4,
+        rawPos: RawVec4,
         color: Vec4,
+        shader_program: ShaderProgram,
     }
     impl Square {
         pub fn new(shader_program: &ShaderProgram, pos: &Vec4, color: &Vec4) -> Self {
@@ -366,8 +365,21 @@ pub mod gl_funcs {
             }   
             //polygon_mode(PolygonMode::Line);
 
-            Self{pos: *pos, color: *color}
+            Self{pos: *pos, rawPos: Self::get_raw_from_xy(&pos), color: *color, shader_program: *shader_program}
 
+        }
+
+        /// return a vector of 4 3 dimensional points
+        pub fn get_raw_pos(&mut self) -> RawVec4 {
+            self.rawPos
+        }
+
+        pub fn set_raw_pos(&mut self, pos: &RawVec4){
+            self.rawPos = *pos;
+        }
+ 
+        fn get_raw_from_xy(pos: &Vec4) -> RawVec4{
+            [[ pos[0], pos[1], 0.0], [ pos[0], pos[3], 0.0], [ pos[2], pos[3], 0.0], [pos[2], pos[1], 0.0]]
         }
 
         pub fn set_pos (&mut self, pos: &Vec4){
@@ -379,16 +391,23 @@ pub mod gl_funcs {
         }
 
         pub fn set_color (&mut self, color: &Vec4){
+            change_draw_color(&self.shader_program, &"ourColor", &color[0], &color[1], &color[2], &color[3]);
             self.color = *color;
         }
 
-        pub fn draw(&mut self) {
-           
-            let vertices: [Vertex; 4] = [[ self.pos[0], self.pos[1], 0.0], [self.pos[0], self.pos[3], 0.0], [self.pos[2], self.pos[3], 0.0], [self.pos[2], self.pos[1], 0.0]];
+        pub fn translate (&mut self, ){
+            unsafe {
+                let c_str = std::ffi::CString::new(uniform_name).unwrap();
+                let vertex_color_location = gl::GetUniformLocation(shader_program.prog_id, c_str.as_ptr() as *const GLchar);
+                gl::Uniform4f(vertex_color_location, *red as GLfloat, *green as GLfloat, *blue as GLfloat, *alpha as GLfloat);
+            }
+        }
 
+        pub fn draw(&mut self) {
+     
             buffer_data(
                 BufferType::Array,
-                bytemuck::cast_slice(&vertices),
+                bytemuck::cast_slice(&self.rawPos),
                 gl::STATIC_DRAW,
                 );
 
@@ -400,7 +419,8 @@ pub mod gl_funcs {
 
     //consts
     pub type Vec4 = [f32; 4];
-    type Vertex = [f32; 3];
+    pub type Vertex = [f32; 3];
+    pub type RawVec4 = [Vertex; 4];
     type TriIndexes = [u32; 3];
 
     const INDICES: [TriIndexes; 2] = [[0, 1, 3], [1, 2, 3]];
